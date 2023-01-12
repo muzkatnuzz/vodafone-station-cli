@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@types/jest": "^28.1.1",
-    "@types/node": "^17.0.42",
+    "@types/node": "^18.0.0",
     "@types/sjcl": "^1.0.30",
     "@types/tough-cookie": "^4.0.2",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
@@ -49,12 +49,12 @@
     "eslint": "^8.17.0",
     "globby": "^11",
     "jest": "^28.1.1",
-    "oclif": "^3",
+    "oclif": "^3.1.2",
     "shx": "^0.3.4",
     "ts-jest": "^28.0.4",
     "ts-node": "^10.8.0",
     "tslib": "^2.4.0",
-    "typescript": "^4.7.4"
+    "typescript": "^4.9.4"
   },
   "oclif": {
     "bin": "vodafone-station-cli",
