@@ -19,5 +19,5 @@
     "titleBar.inactiveForeground": "#15202b99"
   },
   "peacock.color": "#5dc9e2",
-  "jest.jestCommandLine": "node 'node_modules/.bin/jest' '/home/abb/Dokumente/Code/vodafone-station-cli/src/modem/arris-modem.test.ts' -t 'Arris'"
+  "jest.jestCommandLine": "node 'node_modules/.bin/jest' '/home/abb/Dokumente/Code/vodafone-station-cli/src'"
 }

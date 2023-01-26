@@ -2,10 +2,10 @@ import { Flags} from '@oclif/core'
 import {promises as fsp} from 'fs'
 import Command from '../base-command'
 import {discoverModemIp, ModemDiscovery} from '../modem/discovery'
-import { DocsisStatus} from '../modem/modem'
+import {DocsisStatus} from '../modem/modem'
 import {modemFactory} from '../modem/factory'
 import {Log } from '../logger'
-import { webDiagnoseLink } from "../modem/web-diagnose"
+import {webDiagnoseLink} from "../modem/web-diagnose"
 
 export async function getDocsisStatus(password: string, logger:Log): Promise<DocsisStatus> {
   const modemIp = await discoverModemIp()

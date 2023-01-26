@@ -1,7 +1,7 @@
 import {Log} from '../logger'
-import {DocsisStatus, HumanizedDocsis31ChannelStatus, HumanizedDocsisChannelStatus, Modem, DocsisChannelType} from './modem'
+import {StatusData,DocsisStatus, HumanizedDocsis31ChannelStatus, HumanizedDocsisChannelStatus, Modem, DocsisChannelType} from './modem'
 import {decrypt, deriveKey, encrypt} from './tools/crypto'
-import {CryptoVars, extractCredentialString, extractCryptoVars, extractDocsisStatus} from './tools/html-parser'
+import {CryptoVars, extractCredentialString, extractCryptoVars, extractDocsisStatus, extractStatus} from './tools/html-parser'
 
 export interface ArrisDocsisStatus {
   downstream: ArrisDocsisChannelStatus[];
@@ -194,6 +194,25 @@ export class Arris extends Modem {
     }
   }
 
+  async temperature(): Promise<Number> {
+    if (!this.csrfNonce) {
+      throw new Error('A valid csrfNonce is required in order to query the modem.')
+    }
+    try {
+      const {data} = await this.httpClient.get('/php/status_docsis_data.php', {
+        headers: {
+          csrfNonce: this.csrfNonce,
+          Referer: `http://${this.modemIp}/?status_docsis&mid=StatusDocsis`,
+          Connection: 'keep-alive',
+        },
+      })
+      return 42
+    } catch (error) {
+      this.logger.error('Could not fetch modem temperature', error)
+      throw error
+    }
+}
+
   async docsis(): Promise<DocsisStatus> {
     if (!this.csrfNonce) {
       throw new Error('A valid csrfNonce is required in order to query the modem.')
@@ -207,6 +226,26 @@ export class Arris extends Modem {
         },
       })
       return normalizeDocsisStatus(extractDocsisStatus(data as string))
+    } catch (error) {
+      this.logger.error('Could not fetch remote docsis status', error)
+      throw error
+    }
+  }
+
+  async status(): Promise<StatusData> {
+    if (!this.csrfNonce) {
+      throw new Error('A valid csrfNonce is required in order to query the modem.')
+    }
+    try {
+      const {data} = await this.httpClient.get('/php/status_status_data.php', {
+        headers: {
+          csrfNonce: this.csrfNonce,
+          // http://192.168.0.1/?status_status
+          Referer: `http://${this.modemIp}/?status_status`,
+          Connection: 'keep-alive',
+        },
+      })
+      return extractStatus(data as string)
     } catch (error) {
       this.logger.error('Could not fetch remote docsis status', error)
       throw error

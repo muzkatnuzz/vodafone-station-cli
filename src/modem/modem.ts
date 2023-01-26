@@ -43,6 +43,20 @@ export interface DocsisStatus {
   time: string;
 }
 
+// TODO: base class inheritance
+export interface StatusData {
+  SerialNumber: string;
+  FirmwareVersion: string;
+  HardwareTypeVersion: number;
+  UptimeSinceReboot: string;
+  FirewallConfig: string,
+  IPv4Adress: string,
+  IPv4Gateway: string,
+  IPv6Adress: string,
+  IPv6Prefix: string,
+  time: string;
+}
+
 export interface DiagnosedDocsisStatus {
   downstream: DiagnosedDocsisChannelStatus[];
   downstreamOfdm: DiagnosedDocsis31ChannelStatus[];
@@ -67,6 +81,15 @@ export abstract class Modem implements GenericModem {
     this.cookieJar = new CookieJar()
     this.httpClient = this.initAxios()
   }
+
+  temperature(): Promise<Number> {
+    throw new Error('Method not implemented.');
+  }
+  
+  status(): Promise<StatusData> {
+    throw new Error('Method not implemented.');
+  }
+
   restart(): Promise<unknown> {
     throw new Error('Method not implemented.')
   }
