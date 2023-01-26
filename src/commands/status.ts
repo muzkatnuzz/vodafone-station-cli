@@ -1,23 +1,18 @@
 import { Flags} from '@oclif/core'
 import Command from '../base-command'
 import {discoverModemIp, ModemDiscovery} from '../modem/discovery'
-import {StatusData} from '../modem/modem'
+import {Modem, StatusData} from '../modem/modem'
 import {modemFactory} from '../modem/factory'
 import {Log } from '../logger'
 
-export async function getStatus(password: string, logger:Log): Promise<StatusData> {
-  const modemIp = await discoverModemIp()
-  const discoveredModem = await new ModemDiscovery(modemIp, logger).discover()
-  const modem = modemFactory(discoveredModem, logger)
+export async function getStatus(modem: Modem, logger: Log): Promise<StatusData> {
   try {
-    await modem.login(password)
     const statusData = await modem.status()
+    logger.debug(statusData)
     return statusData
   } catch (error) {
     logger.error(`Could not fetch status from modem.`,error)
     throw error;
-  } finally {
-    await modem.logout()
   }
 }
 
@@ -47,15 +42,25 @@ export default class Status extends Command {
       )
       this.exit()
     }
+    let modem
 
     try {
-      const Status = await getStatus(password!, this.logger)
+      const modemIp = await discoverModemIp()
+      const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
+      modem = modemFactory(discoveredModem, this.logger)
+
+      const Status = await getStatus(modem, this.logger)
     
       this.log(JSON.stringify(Status))
 
       this.exit()
     } catch (error) {
       this.error(error as Error,{message:"Something went wrong"})
+    }
+    finally {
+      if (modem) {
+      await modem.logout() 
+      }
     }
   }
 }
