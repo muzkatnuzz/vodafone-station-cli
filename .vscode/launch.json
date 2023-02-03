@@ -5,14 +5,25 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Dbg",
+            "name": "Status",
             "program": "${workspaceFolder}/bin/dev",
             "request": "launch",
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "args": ["status", "-pYourPwd"],
+            "args": ["status", "<yourPwd>"],
             "type": "node"
+        },
+        {
+            "name": "Start",
+            "program": "${workspaceFolder}/bin/dev",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "args": ["start", "<yourPwd>"],
+            "type": "node", 
+            "env": {"DEBUG": "\\*"}
         },
     ]
 }

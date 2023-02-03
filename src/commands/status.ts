@@ -36,24 +36,22 @@ export default class Status extends Command {
   async run(): Promise<void> {
     const { flags } = await this.parse(Status)
     const password = flags.password ?? process.env.VODAFONE_ROUTER_PASSWORD
-    if (!password || password === '') {
+    if (!password || password === undefined) {
       this.log(
         'You must provide a password either using -p or by setting the environment variable VODAFONE_ROUTER_PASSWORD'
       )
       this.exit()
     }
     let modem
-
     try {
+      // TODO: use login command
       const modemIp = await discoverModemIp()
       const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
       modem = modemFactory(discoveredModem, this.logger)
-
+      await modem.login(password!)
       const Status = await getStatus(modem, this.logger)
     
       this.log(JSON.stringify(Status))
-
-      this.exit()
     } catch (error) {
       this.error(error as Error,{message:"Something went wrong"})
     }

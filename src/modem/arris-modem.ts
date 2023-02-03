@@ -100,6 +100,7 @@ export class Arris extends Modem {
   }
 
   async login(password: string): Promise<void> {
+    this.logger.log("Logging in")
     const cryptoVars = await this.getCurrentCryptoVars()
     const encPw = this.encryptPassword(password, cryptoVars)
     this.logger.debug('Encrypted password: ', encPw)
