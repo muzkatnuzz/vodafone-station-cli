@@ -1,11 +1,5 @@
-import type {ArrisDocsisChannelStatus, ArrisDocsisStatus} from '../arris-modem'
-import type {StatusData} from '../modem'
-
-const nonceMatcher = /var csp_nonce = "(?<nonce>.*?)";/gm
-const ivMatcher = /var myIv = ["|'](?<iv>.*?)["|'];/gm
-const saltMatcher = /var mySalt = ["|'](?<salt>.*?)["|'];/gm
-const sessionIdMatcher = /var currentSessionId = ["|'](?<sessionId>.*?)["|'];/gm
-const swVersionMatcher = /_ga.swVersion = ["|'](?<swVersion>.*?)["|'];/gm
+import type { ArrisDocsisChannelStatus, ArrisDocsisStatus } from '../arris-modem'
+import type { StatusData } from '../modem'
 
 export interface CryptoVars {
   nonce: string;
@@ -15,14 +9,30 @@ export interface CryptoVars {
 }
 
 export function extractCryptoVars(html: string): CryptoVars {
-  const nonce = nonceMatcher.exec(html)?.groups?.nonce
-  const iv = ivMatcher.exec(html)?.groups?.iv
-  const salt = saltMatcher.exec(html)?.groups?.salt
-  const sessionId = sessionIdMatcher.exec(html)?.groups?.sessionId
-  return {nonce, iv, salt, sessionId} as CryptoVars
+  const cryptoVarMatcher = {
+    nonceMatcher: /var csp_nonce = "(?<nonce>.*?)";/gm,
+    ivMatcher: /var myIv = ["|'](?<iv>.*?)["|'];/gm,
+    saltMatcher: /var mySalt = ["|'](?<salt>.*?)["|'];/gm,
+    sessionIdMatcher: /var currentSessionId = ["|'](?<sessionId>.*?)["|'];/gm
+  }
+
+  // reset index for regex global switch from previous calls
+  {
+    let key: keyof typeof cryptoVarMatcher;
+    for (key in cryptoVarMatcher) {
+      cryptoVarMatcher[key].lastIndex = 0
+    }
+  }
+  const nonce = cryptoVarMatcher.nonceMatcher.exec(html)?.groups?.nonce
+  const iv = cryptoVarMatcher.ivMatcher.exec(html)?.groups?.iv
+  const salt = cryptoVarMatcher.saltMatcher.exec(html)?.groups?.salt
+  const sessionId = cryptoVarMatcher.sessionIdMatcher.exec(html)?.groups?.sessionId
+  return { nonce, iv, salt, sessionId } as CryptoVars
 }
 
-export function extractFirmwareVersion(html: string): string|undefined {
+export function extractFirmwareVersion(html: string): string | undefined {
+  const swVersionMatcher = /_ga.swVersion = ["|'](?<swVersion>.*?)["|'];/gm
+  swVersionMatcher.lastIndex = 0 // reset index for regex global switch from previous calls
   return swVersionMatcher.exec(html)?.groups?.swVersion
 }
 
@@ -44,6 +54,14 @@ export function extractStatus(
     firewallConfig: /var js_FirewallConfig = ["|'](?<firewallConfig>.*?)["|'];/gm,
   }
 
+  // reset index for regex global switch from previous calls
+  {
+    let key: keyof typeof statusMatcher;
+    for (key in statusMatcher) {
+      statusMatcher[key].lastIndex = 0
+    }
+  }
+
   const serialNumber = statusMatcher.serialNumber.exec(html)?.groups?.serialNumber ?? ''
   const firmwareVersion = statusMatcher.firmwareVersion.exec(html)?.groups?.firmwareVersion ?? ''
   const uptime = statusMatcher.uptime.exec(html)?.groups?.uptime ?? ''
@@ -54,7 +72,7 @@ export function extractStatus(
   const ipv6Address = statusMatcher.ipv6Address.exec(html)?.groups?.ipv6Address ?? ''
   const ipv6Prefix = statusMatcher.ipv6Prefix.exec(html)?.groups?.ipv6Prefix ?? ''
   const firewallConfig = statusMatcher.firewallConfig.exec(html)?.groups?.firewallConfig ?? ''
-  
+
   return {
     SerialNumber: serialNumber,
     FirmwareVersion: firmwareVersion,
@@ -81,14 +99,20 @@ export function extractDocsisStatus(
     ofdmChannels: /js_ofdmNums = ["|'](?<ofdmChannels>.*?)["|'];/gm,
   }
 
+  // reset index for regex global switch from previous calls
+  {
+    let key: keyof typeof docsisMatcher;
+    for (key in docsisMatcher) {
+      docsisMatcher[key].lastIndex = 0
+    }
+  }
+
   const downstream = docsisMatcher.dsData.exec(html)?.groups?.dsData ?? '[]'
   const upstream = docsisMatcher.usData.exec(html)?.groups?.usData ?? '[]'
-  const downstreamChannels =
-    docsisMatcher.dsChannels.exec(html)?.groups?.dsChannels ?? '0'
-  const upstreamChannels =
-    docsisMatcher.usChannels.exec(html)?.groups?.usChannels ?? '0'
-  const ofdmChannels =
-    docsisMatcher.ofdmChannels.exec(html)?.groups?.ofdmChannels ?? '0'
+  const downstreamChannels = docsisMatcher.dsChannels.exec(html)?.groups?.dsChannels ?? '0'
+  const upstreamChannels = docsisMatcher.usChannels.exec(html)?.groups?.usChannels ?? '0'
+  const ofdmChannels = docsisMatcher.ofdmChannels.exec(html)?.groups?.ofdmChannels ?? '0'
+
   return {
     downstream: JSON.parse(downstream) as ArrisDocsisChannelStatus[],
     upstream: JSON.parse(upstream) as ArrisDocsisChannelStatus[],
@@ -101,5 +125,6 @@ export function extractDocsisStatus(
 
 export function extractCredentialString(html: string): string {
   const matcher = /createCookie\([\n]*\s*"credential"\s*,[\n]*\s*["|'](?<credential>.*?)["|']\s*/gims
+  matcher.lastIndex = 0 // reset index from previous calls
   return matcher.exec(html)?.groups?.credential ?? ''
 }
