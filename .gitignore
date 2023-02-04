@@ -88,3 +88,6 @@ oclif.manifest.json
 
 # Generated reports
 reports/
+*.heapsnapshot
+*.heapprofile
+*.cpuprofile
