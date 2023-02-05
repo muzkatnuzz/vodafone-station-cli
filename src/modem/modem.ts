@@ -70,6 +70,7 @@ export interface GenericModem {
   login(password: string): Promise<void>;
   docsis(): Promise<DocsisStatus>;
   restart(): Promise<unknown>;
+  status(): Promise<StatusData>;
 }
 
 export abstract class Modem implements GenericModem {

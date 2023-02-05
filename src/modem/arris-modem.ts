@@ -158,7 +158,7 @@ export class Arris extends Modem {
     return csrfNonce
   }
 
-  async  createServerRecord(
+  async createServerRecord(
     setPasswordRequest: SetPasswordRequest
   ): Promise<SetPasswordResponse> {
     try {
@@ -185,7 +185,7 @@ export class Arris extends Modem {
     this.cookieJar.setCookie(`credential= ${credential}`, `http://${this.modemIp}`)
   }
 
-  async  fetchCredential(): Promise<string> {
+  async fetchCredential(): Promise<string> {
     try {
       const {data} = await this.httpClient.get('/base_95x.js')
       return extractCredentialString(data as string)

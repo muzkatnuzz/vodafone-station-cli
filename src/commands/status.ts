@@ -49,9 +49,9 @@ export default class Status extends Command {
       const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
       modem = modemFactory(discoveredModem, this.logger)
       await modem.login(password!)
-      const Status = await getStatus(modem, this.logger)
+      const status = await getStatus(modem, this.logger)
     
-      this.log(JSON.stringify(Status))
+      this.log(JSON.stringify(status))
     } catch (error) {
       this.error(error as Error,{message:"Something went wrong"})
     }

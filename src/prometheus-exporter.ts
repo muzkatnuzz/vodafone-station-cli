@@ -1,25 +1,28 @@
-import { Counter, register } from 'prom-client';
+import { register, collectDefaultMetrics } from 'prom-client';
 import Express from 'express';
-import { CookieJar } from 'tough-cookie';
 import { modemFactory } from './modem/factory';
 import { discoverModemIp, ModemDiscovery } from './modem/discovery'
 import { Log } from './logger'
 import { getStatus } from './commands/status'
-import { resolve } from 'path';
+import { MetricBaseClass, MetricTypes } from './metrics/metrics-base'
+import { StatusMetric } from './metrics/status-metric';
 
 export class PrometheusExporter {
-    protected readonly httpServer: Express.Application
-    protected readonly cookieJar: CookieJar
-    protected readonly scrapePort: Number
+    private readonly password: string
+    private readonly httpServer: Express.Application
+    private readonly scrapePort: Number
+    private readonly logger: Log
+    private readonly extractors = new Map<MetricTypes, MetricBaseClass>
 
     /**
      * Create a new prometheus client
      */
-    constructor(protected password: string, protected readonly logger: Log) {
+    constructor(password: string, logger: Log) {
+        this.logger = logger
         this.password = password
         this.scrapePort = 9705
-        this.cookieJar = new CookieJar()
         this.httpServer = Express()
+        this.extractors.set(MetricTypes.Status, new StatusMetric("Status", "Help on Status"))
         this.initServer()
     }
 
@@ -64,6 +67,8 @@ export class PrometheusExporter {
             this.logger.error(error)
         }
 
+        this.extractors.get(MetricTypes.Status)?.extract(statusData);
+
         let postScrapeTime = Date.now()
 
         // logout after all data collected
@@ -74,7 +79,7 @@ export class PrometheusExporter {
             this.logger.error(error)
             loginLogoutSuccess = false
         }
-
+        
         // summarize collected data
         scrapeDuration.set('status', postScrapeTime.valueOf() - preScrapeTime.valueOf())
         scrapeSuccess.set('status', statusData ? true : false)
@@ -83,40 +88,29 @@ export class PrometheusExporter {
 
     private initServer() {
         // init metric handling
-        const collectDefaultMetrics = ({
-            timeout: 10000,
+        collectDefaultMetrics({ register: register,
             gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5], // These are the default buckets.
         });
 
-        const c = new Counter({
-            name: 'test_counter',
-            help: 'Example',
-            labelNames: ['code']
-        })
-
-        new Counter({
-            name: 'scrape_counter',
-            help: 'Number of scrapes (example of a counter with a collect fn)',
-            collect() {
-                // collect is invoked each time `register.metrics()` is called.
-                this.inc();
-            },
+        this.httpServer.get('/metrics', async (req, res) => {
+            try {
+                res.set('Content-Type', register.contentType);
+                res.end(await register.metrics());
+                console.log("Scraped")
+            } catch (ex) {
+                res.status(500).end(ex);
+            }
         });
-
-        setInterval(() => {
-            c.inc({ code: 200 });
-        }, 5000);
-
-        setInterval(() => {
-            c.inc({ code: 400 });
-        }, 2000);
-
-        setInterval(() => {
-            c.inc();
-        }, 2000);
-
-        register.metrics().then(str => console.log(str));
-
+        
+        this.httpServer.get('/metrics/uptime', async (req, res) => {
+            try {
+                res.set('Content-Type', register.contentType);
+                res.end(await register.getSingleMetricAsString('Uptime'));
+            } catch (ex) {
+                res.status(500).end(ex);
+            }
+        });
+        
         // magic to actually serve scraped values
         this.httpServer.get('/metrics', (req, res) => {
             console.log('Scraped')
@@ -127,31 +121,20 @@ export class PrometheusExporter {
             console.log(`🚨 Prometheus listening on port ${this.scrapePort} /metrics`)
         )
 
-        // wait indefinitely
-        this.waitFor(false, 3000)
+        // collect inifinitly
+        this.collectMetrics(30000)
     }
 
     /**
-     * Sleep in intervalls until condition comes true
-     * @param condition condition to check between intervalls
+     * Sleep in intervalls and collect metrics between
      * @param intervall intervall to sleep in between in ms
      */
-    private async waitFor(condition: boolean, intervall: number): Promise<any> {
-        const poll = () => {
-            if (condition) {
-                resolve()
-            } else {
-                setTimeout(() => poll(), intervall)
-            }
+    private async collectMetrics(intervall: number): Promise<any> {
+        const poll = async() => {
+            await this.scrape()
+            setTimeout(() => poll(), intervall)
         };
 
         return new Promise(poll)
-    }
-
-    /**
-     * stopClient
-     */
-    public stopClient() {
-        // TODO: get running instance and stop it
     }
 }
