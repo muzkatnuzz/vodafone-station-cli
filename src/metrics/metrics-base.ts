@@ -4,13 +4,13 @@ export enum MetricTypes {
 	Users,
 }
 
-export interface MetricsBase {
+export interface MetricsBase<T> {
     name: string;
     help: string;
-    extract<T>(data: T): void;
+    extract(data: T): void;
 }
 
-export abstract class MetricBaseClass implements MetricsBase {
+export abstract class MetricBaseClass<T> implements MetricsBase<T> {
     public name: string;
     public help: string;
 
@@ -22,7 +22,5 @@ export abstract class MetricBaseClass implements MetricsBase {
         this.help = help
     }
 
-    extract<T>(data: T) {
-        throw new Error('Method not implemented.');
-    }
+    abstract extract(data: T): void
 }

@@ -6,13 +6,14 @@ import { Log } from './logger'
 import { getStatus } from './commands/status'
 import { MetricBaseClass, MetricTypes } from './metrics/metrics-base'
 import { StatusMetric } from './metrics/status-metric';
+import { StatusData } from './modem/modem';
 
 export class PrometheusExporter {
     private readonly password: string
     private readonly httpServer: Express.Application
     private readonly scrapePort: Number
     private readonly logger: Log
-    private readonly extractors = new Map<MetricTypes, MetricBaseClass>
+    private readonly extractors = new Map<MetricTypes, MetricBaseClass<StatusData>>
 
     /**
      * Create a new prometheus client
@@ -56,7 +57,7 @@ export class PrometheusExporter {
         }
 
         let preScrapeTime = Date.now()
-        let statusData
+        let statusData = undefined
 
         try {
             // scrape status
@@ -67,8 +68,10 @@ export class PrometheusExporter {
             this.logger.error(error)
         }
 
-        this.extractors.get(MetricTypes.Status)?.extract(statusData);
-
+        if (statusData != undefined) {
+            (this.extractors.get(MetricTypes.Status) as StatusMetric)?.extract(statusData);
+        }
+ 
         let postScrapeTime = Date.now()
 
         // logout after all data collected

@@ -1,7 +1,8 @@
-import { MetricBaseClass } from "./metrics-base";
-import { Counter, Gauge } from 'prom-client'
+import { MetricBaseClass } from './metrics-base';
+import { Gauge, Counter } from 'prom-client'
+import { StatusData } from '../modem/modem'
 
-export class StatusMetric extends MetricBaseClass {
+export class StatusMetric extends MetricBaseClass<StatusData> {
     private uptimeGauge: Gauge
 
     /**
@@ -10,16 +11,14 @@ export class StatusMetric extends MetricBaseClass {
     constructor(name: string, help:string) {
         super(name, help);
 
-        // report uptime as counter: var js_UptimeSinceReboot = '34,13,39';
-        // TODO: parse uptime string from status data
         this.uptimeGauge = new Gauge({ 
-            name: "Uptime",
+            name: "device_uptime",
             help: "Time since last reboot",
             labelNames: ["status"],
         });
     }
-    
-    override extract<StatusData>(data: StatusData) {
+
+    extract<T extends StatusData>(data: T): void {
         
         // InfoMetricFamily(
         //     "connectbox_device",
@@ -35,24 +34,16 @@ export class StatusMetric extends MetricBaseClass {
         //     },
         // )
 
-        this.uptimeGauge.set(10)
-
-        // # uptime is reported in a format like "36day(s)15h:24m:58s" which needs parsing
-        // uptime_pattern = r"(\d+)day\(s\)(\d+)h:(\d+)m:(\d+)s"
-        // m = re.fullmatch(uptime_pattern, uptime_as_str)
-        // if m is not None:
-        //     uptime_timedelta = timedelta(days=int(m[1]), hours=int(m[2]), minutes=int(m[3]), seconds=int(m[4]))
-        //     uptime_seconds = uptime_timedelta.total_seconds()
-        // else:
-        //     self._logger.warning(f"Unexpected duration format '{uptime_as_str}', please open an issue on github.")
-        //     uptime_seconds = -1
-
-        // yield GaugeMetricFamily(
-        //     "connectbox_uptime",
-        //     "Device uptime in seconds",
-        //     unit="seconds",
-        //     value=uptime_seconds,
-        // )
+        // convert from format like "62,05,43" =>Time since last reboot 62 Days, 05 Hours und 43 Minutes
+        // source in status php: var js_UptimeSinceReboot = '62,05,43';
+        // report total seconds since last reboot to grafana
+        let uptime = /^(?<Days>\d+),(?<Hours>\d+),(?<Minutes>\d+)$/.exec(data.UptimeSinceReboot)
+        this.uptimeGauge.set(
+            (uptime?.groups?.Days ? Number.parseInt(uptime.groups.Days) * 24 * 60 * 60 : 0) + // days to seconds
+            (uptime?.groups?.Hours ? Number.parseInt(uptime.groups.Hours) * 60 * 60 : 0) + // hours to seconds
+            (uptime?.groups?.Minutes ? Number.parseInt(uptime.groups.Minutes) * 60 : 0) // minutes to second
+            )
+        // report router time?: Date, Time	09.02.2023 | 08:07
     }
   }
 

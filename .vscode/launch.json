@@ -11,7 +11,10 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "args": ["status", "<yourPwd>"],
+            "args": [
+                "status",
+                "<yourPwd>"
+            ],
             "type": "node"
         },
         {
@@ -21,9 +24,14 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "args": ["start", "<yourPwd>"],
-            "type": "node", 
-            "env": {"DEBUG": "\\*"}
+            "args": [
+                "start",
+                "<yourPwd>"
+            ],
+            "type": "node",
+            "env": {
+                "DEBUG": "\\*"
+            }
         },
     ]
 }
