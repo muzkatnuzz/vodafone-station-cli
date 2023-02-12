@@ -1,7 +1,7 @@
 import {Log} from '../logger'
-import {StatusData,DocsisStatus, HumanizedDocsis31ChannelStatus, HumanizedDocsisChannelStatus, Modem, DocsisChannelType} from './modem'
+import {StatusData,DocsisStatus, HumanizedDocsis31ChannelStatus, HumanizedDocsisChannelStatus, Modem, DocsisChannelType, OverviewData} from './modem'
 import {decrypt, deriveKey, encrypt} from './tools/crypto'
-import {CryptoVars, extractCredentialString, extractCryptoVars, extractDocsisStatus, extractStatus} from './tools/html-parser'
+import {CryptoVars, extractCredentialString, extractCryptoVars, extractDocsisStatus, extractOverviewData, extractStatus} from './tools/html-parser'
 
 export interface ArrisDocsisStatus {
   downstream: ArrisDocsisChannelStatus[];
@@ -227,6 +227,25 @@ export class Arris extends Modem {
         },
       })
       return normalizeDocsisStatus(extractDocsisStatus(data as string))
+    } catch (error) {
+      this.logger.error('Could not fetch remote docsis status', error)
+      throw error
+    }
+  }
+
+  async overview(): Promise<OverviewData> {
+    if (!this.csrfNonce) {
+      throw new Error('A valid csrfNonce is required in order to query the modem.')
+    }
+    try {
+      const {data} = await this.httpClient.get('/php/overview_data.php', {
+        headers: {
+          csrfNonce: this.csrfNonce,
+          Referer: `http://${this.modemIp}/`,
+          Connection: 'keep-alive',
+        },
+      })
+      return extractOverviewData(data as string)
     } catch (error) {
       this.logger.error('Could not fetch remote docsis status', error)
       throw error

@@ -4,16 +4,18 @@ import { modemFactory } from './modem/factory';
 import { discoverModemIp, ModemDiscovery } from './modem/discovery'
 import { Log } from './logger'
 import { getStatus } from './commands/status'
-import { MetricBaseClass, MetricTypes } from './metrics/metrics-base'
+import { getOverview } from './commands/overview'
+import { MetricsBase, MetricTypes } from './metrics/metrics-base'
 import { StatusMetric } from './metrics/status-metric';
-import { StatusData } from './modem/modem';
+import { StatusData, OverviewData } from './modem/modem';
+import { OverviewMetric } from './metrics/overview-metric';
 
 export class PrometheusExporter {
     private readonly password: string
     private readonly httpServer: Express.Application
     private readonly scrapePort: Number
     private readonly logger: Log
-    private readonly extractors = new Map<MetricTypes, MetricBaseClass<StatusData>>
+    private readonly extractors = new Map<MetricTypes, MetricsBase<any>>
 
     /**
      * Create a new prometheus client
@@ -24,6 +26,7 @@ export class PrometheusExporter {
         this.scrapePort = 9705
         this.httpServer = Express()
         this.extractors.set(MetricTypes.Status, new StatusMetric("Status", "Help on Status"))
+        this.extractors.set(MetricTypes.Overview, new OverviewMetric("Overview", "Help on Overview"))
         this.initServer()
     }
 
@@ -35,35 +38,37 @@ export class PrometheusExporter {
         let scrapeSuccess = new Map<string, boolean>() // metric name, flag
 
         let loginLogoutSuccess = true
-        let connectBox
+        let modem
 
         // login
         try {
             // TODO: use login command
             const modemIp = await discoverModemIp()
             const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
-            connectBox = modemFactory(discoveredModem, this.logger)
+            modem = modemFactory(discoveredModem, this.logger)
 
-            await connectBox.login(this.password)
+            await modem.login(this.password)
         } catch (error) {
             loginLogoutSuccess = false
-            connectBox = null
+            modem = null
             this.logger.error('Not able to login', error)
         }
 
-        if (connectBox == null) {
+        if (modem == null) {
             loginLogoutSuccess = false
             return
         }
 
         let preScrapeTime = Date.now()
         let statusData = undefined
+        let overviewData = undefined
 
         try {
             // scrape status
-            statusData = await getStatus(connectBox, this.logger)
+            statusData = await getStatus(modem, this.logger)
             // TODO: get docsis info
-            // TODO: get connected devices
+            // get overview data, contains attached devices
+            overviewData = await getOverview(modem, this.logger)
         } catch (error) {
             this.logger.error(error)
         }
@@ -71,13 +76,17 @@ export class PrometheusExporter {
         if (statusData != undefined) {
             (this.extractors.get(MetricTypes.Status) as StatusMetric)?.extract(statusData);
         }
+
+        if (overviewData != undefined) {
+            (this.extractors.get(MetricTypes.Overview) as OverviewMetric)?.extract(overviewData);
+        }
  
         let postScrapeTime = Date.now()
 
         // logout after all data collected
         try {
             this.logger.log("Logout after scrape cycle.")
-            await connectBox.logout()
+            await modem.logout()
         } catch (error) {
             this.logger.error(error)
             loginLogoutSuccess = false

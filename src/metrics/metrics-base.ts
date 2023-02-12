@@ -1,7 +1,7 @@
 export enum MetricTypes {
 	Status,
 	Docsis,
-	Users,
+	Overview,
 }
 
 export interface MetricsBase<T> {

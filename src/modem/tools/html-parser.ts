@@ -1,5 +1,5 @@
 import type { ArrisDocsisChannelStatus, ArrisDocsisStatus } from '../arris-modem'
-import type { StatusData } from '../modem'
+import type { OverviewData, StatusData } from '../modem'
 
 export interface CryptoVars {
   nonce: string;
@@ -84,6 +84,70 @@ export function extractStatus(
     IPv6Adress: ipv6Address,
     IPv6Prefix: ipv6Prefix,
     time: time
+  }
+}
+
+export function extractOverviewData(
+  html: string,
+  date: Date = new Date()
+): OverviewData {
+  const overviewMatcher = {
+    isCmOperational: /js_isCmOperational = ["|'](?<isCmOperational>.*?)["|'];/gm,
+    wifiEnable: /js_wifiEnable = ["|'](?<wifiEnable>.*?)["|'];/gm,
+    guestWifiEnable: /js_guestWifiEnable = ["|'](?<guestWifiEnable>.*?)["|'];/gm,
+    wpsEnable: /js_wpsEnable = ["|'](?<wpsEnable>.*?)["|'];/gm,
+    scheduleEnable: /js_scheduleEnable = ["|'](?<scheduleEnable>.*?)["|'];/gm,
+    phone1: /js_phone1 = ["|'](?<phone1>.*?)["|'];/gm,
+    phone2: /js_phone2 = ["|'](?<phone2>.*?)["|'];/gm,
+    lanAttachedDevice: /json_lanAttachedDevice = (?<lanAttachedDevice>.*?);/gm,
+    primaryWlanAttachedDevice: /json_primaryWlanAttachedDevice = (?<primaryWlanAttachedDevice>.*?);/gm,
+    guestWlanAttachedDevice: /json_guestWlanAttachedDevice = (?<guestWlanAttachedDevice>.*?);/gm,
+    gwMode: /_ga.gwMode = ["|'](?<gwMode>.*?)["|'];/gm,
+    dsLitePlusIpv6Mode: /_ga.dsLitePlusIpv6Mode = ["|'](?<dsLitePlusIpv6Mode>.*?)["|'];/gm,
+    mtaEnabledByDhcp: /_ga.mtaEnabledByDhcp = ["|'](?<mtaEnabledByDhcp>.*?)["|'];/gm,
+    wifiEnabledByMso: /_ga.wifiEnabledByMso = ["|'](?<wifiEnabledByMso>.*?)["|'];/gm,
+    modemConnectionStatus: /_ga.modemConnectionStatus = ["|'](?<modemConnectionStatus>.*?)["|'];/gm,
+  }
+
+  // reset index for regex global switch from previous calls
+  {
+    let key: keyof typeof overviewMatcher;
+    for (key in overviewMatcher) {
+      overviewMatcher[key].lastIndex = 0
+    }
+  }
+
+  const isCmOperational = Number(overviewMatcher.isCmOperational.exec(html)?.groups?.isCmOperational ?? 0)
+  const wifiEnable = Boolean(overviewMatcher.wifiEnable.exec(html)?.groups?.wifiEnable ?? undefined)
+  const guestWifiEnable = Boolean(overviewMatcher.guestWifiEnable.exec(html)?.groups?.guestWifiEnable ?? undefined)
+  const wpsEnable = Boolean(overviewMatcher.wpsEnable.exec(html)?.groups?.wpsEnable ?? undefined)
+  const scheduleEnable = Boolean(overviewMatcher.scheduleEnable.exec(html)?.groups?.scheduleEnable ?? undefined)
+  const phone1 = overviewMatcher.phone1.exec(html)?.groups?.phone1 ?? ''
+  const phone2 = overviewMatcher.phone2.exec(html)?.groups?.phone2 ?? ''
+  const lanAttachedDevice = JSON.parse(overviewMatcher.lanAttachedDevice.exec(html)?.groups?.lanAttachedDevice ?? '[]')
+  const primaryWlanAttachedDevice = JSON.parse(overviewMatcher.primaryWlanAttachedDevice.exec(html)?.groups?.primaryWlanAttachedDevice ?? '[]')
+  const guestWlanAttachedDevice = JSON.parse(overviewMatcher.guestWlanAttachedDevice.exec(html)?.groups?.guestWlanAttachedDevice ?? '[]')
+  const gwMode = overviewMatcher.gwMode.exec(html)?.groups?.gwMode ?? ''
+  const dsLitePlusIpv6Mode = Boolean(overviewMatcher.dsLitePlusIpv6Mode.exec(html)?.groups?.dsLitePlusIpv6Mode ?? undefined)
+  const mtaEnabledByDhcp = Boolean(overviewMatcher.mtaEnabledByDhcp.exec(html)?.groups?.mtaEnabledByDhcp ?? undefined)
+  const wifiEnabledByMso = Boolean(overviewMatcher.wifiEnabledByMso.exec(html)?.groups?.wifiEnabledByMso ?? undefined)
+  const modemConnectionStatus = overviewMatcher.modemConnectionStatus.exec(html)?.groups?.modemConnectionStatus ?? ''
+
+  return {
+    IsCmOperational: isCmOperational,
+    WifiEnabled: wifiEnable,
+    GuestWifiEnabled: guestWifiEnable,
+    WpsEnabled: wpsEnable,
+    ScheduleEnabled: scheduleEnable,
+    Phones: [{Number: phone1}, {Number: phone2}],
+    LanAttachedDevices: lanAttachedDevice,
+    PrimaryWlanAttachedDevice: primaryWlanAttachedDevice,
+    GuestWlanAttachedDevice: guestWlanAttachedDevice,
+    GwMode: gwMode,
+    DsLitePlusIPv6: dsLitePlusIpv6Mode,
+    MtaEnabledByDHCP: mtaEnabledByDhcp,
+    WifiEnabledByMso: wifiEnabledByMso,
+    ModemConnectionStatus: modemConnectionStatus
   }
 }
 

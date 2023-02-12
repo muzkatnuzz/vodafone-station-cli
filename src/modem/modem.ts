@@ -57,6 +57,55 @@ export interface StatusData {
   time: string;
 }
 
+// members based on Arris Modem
+export interface OverviewData {
+  IsCmOperational: number;
+  WifiEnabled: boolean;
+  GuestWifiEnabled: boolean;
+  WpsEnabled: boolean;
+  ScheduleEnabled: boolean;
+  Phones: PhoneStatus[],
+  LanAttachedDevices: AttachedLanDevice[],
+  PrimaryWlanAttachedDevice: AttachedWlanDevice[],
+  GuestWlanAttachedDevice: AttachedWlanDevice[],
+  GwMode: string,
+  DsLitePlusIPv6: boolean;
+  MtaEnabledByDHCP: boolean;
+  WifiEnabledByMso: boolean;
+  ModemConnectionStatus: string;
+}
+
+export interface PhoneStatus{
+  Number: string
+}
+
+export interface AttachedLanDevice{
+  MAC: string;
+  Active: boolean;
+  Index: number;
+  HostName: string;
+  IPv4: string;
+  IPv6: string;
+  Interface: string;
+  IndexAP: number;
+  Comment: string;
+  Speed: string;
+}
+
+export interface AttachedWlanDevice{
+  MAC: string;
+  Active: boolean;
+  Index: number;
+  HostName: string;
+  IPv4: string;
+  IPv6: string;
+  Interface: string;
+  IndexAP: number;
+  Comment: string;
+  Speed: string;
+  LinkRate: number
+}
+
 export interface DiagnosedDocsisStatus {
   downstream: DiagnosedDocsisChannelStatus[];
   downstreamOfdm: DiagnosedDocsis31ChannelStatus[];
@@ -71,6 +120,7 @@ export interface GenericModem {
   docsis(): Promise<DocsisStatus>;
   restart(): Promise<unknown>;
   status(): Promise<StatusData>;
+  overview(): Promise<OverviewData>;
 }
 
 export abstract class Modem implements GenericModem {
@@ -86,7 +136,11 @@ export abstract class Modem implements GenericModem {
   temperature(): Promise<Number> {
     throw new Error('Method not implemented.');
   }
-  
+
+  overview(): Promise<OverviewData> {
+    throw new Error('Method not implemented.');
+  }
+
   status(): Promise<StatusData> {
     throw new Error('Method not implemented.');
   }
