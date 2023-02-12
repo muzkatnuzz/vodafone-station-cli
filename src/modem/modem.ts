@@ -43,7 +43,7 @@ export interface DocsisStatus {
   time: string;
 }
 
-// TODO: base class inheritance
+// members based on Arris Modem
 export interface StatusData {
   SerialNumber: string;
   FirmwareVersion: string;
