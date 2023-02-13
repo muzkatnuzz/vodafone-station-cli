@@ -12,8 +12,21 @@
                 "<node_internals>/**"
             ],
             "args": [
-                "status",
-                "<yourPwd>"
+                "status"
+            ],
+            "type": "node",
+            "console": "internalConsole",
+            "outputCapture": "std"
+        },
+        {
+            "name": "Overview",
+            "program": "${workspaceFolder}/bin/dev",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "args": [
+                "overview"
             ],
             "type": "node"
         },
@@ -25,13 +38,9 @@
                 "<node_internals>/**"
             ],
             "args": [
-                "start",
-                "<yourPwd>"
+                "start"
             ],
             "type": "node",
-            "env": {
-                "DEBUG": "\\*"
-            }
         },
     ]
 }
