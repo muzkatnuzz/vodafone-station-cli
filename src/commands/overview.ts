@@ -42,6 +42,7 @@ export default class Overview extends Command {
       )
       this.exit()
     }
+    
     let modem
     try {
       // TODO: use login command
@@ -57,7 +58,7 @@ export default class Overview extends Command {
     }
     finally {
       if (modem) {
-      await modem.logout() 
+        await modem.logout() 
       }
     }
   }

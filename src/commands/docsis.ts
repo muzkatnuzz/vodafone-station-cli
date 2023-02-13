@@ -2,24 +2,19 @@ import { Flags} from '@oclif/core'
 import {promises as fsp} from 'fs'
 import Command from '../base-command'
 import {discoverModemIp, ModemDiscovery} from '../modem/discovery'
-import {DocsisStatus} from '../modem/modem'
+import {Modem, DocsisStatus} from '../modem/modem'
 import {modemFactory} from '../modem/factory'
 import {Log } from '../logger'
 import {webDiagnoseLink} from "../modem/web-diagnose"
 
-export async function getDocsisStatus(password: string, logger:Log): Promise<DocsisStatus> {
-  const modemIp = await discoverModemIp()
-  const discoveredModem = await new ModemDiscovery(modemIp, logger).discover()
-  const modem = modemFactory(discoveredModem, logger)
+export async function getDocsisStatus(modem: Modem, logger:Log): Promise<DocsisStatus> {
   try {
-    await modem.login(password)
     const docsisData = await modem.docsis()
+    logger.debug(docsisData)
     return docsisData
   } catch (error) {
     logger.error(`Could not fetch docsis status from modem.`,error)
     throw error;
-  } finally {
-    await modem.logout()
   }
 }
 
@@ -65,8 +60,14 @@ export default class Docsis extends Command {
       this.exit()
     }
 
+    let modem
     try {
-      const docsisStatus = await getDocsisStatus(password!, this.logger)
+      // TODO: use login command
+      const modemIp = await discoverModemIp()
+      const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
+      modem = modemFactory(discoveredModem, this.logger)
+      await modem.login(password!)
+      const docsisStatus = await getDocsisStatus(modem, this.logger)
       const docsisStatusJSON = JSON.stringify(docsisStatus, undefined, 4)
 
       if (flags.file) {
@@ -78,10 +79,13 @@ export default class Docsis extends Command {
       if (flags.web) {
         this.log(`Review your docsis state online -> ${webDiagnoseLink(docsisStatus)}`)
       }
-
-      this.exit()
     } catch (error) {
       this.error(error as Error,{message:"Something went wrong"})
+    }
+    finally{
+      if(modem){
+        await modem.logout()
+      }
     }
   }
 }

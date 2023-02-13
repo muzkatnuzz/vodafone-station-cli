@@ -7,8 +7,9 @@ import { getStatus } from './commands/status'
 import { getOverview } from './commands/overview'
 import { MetricsBase, MetricTypes } from './metrics/metrics-base'
 import { StatusMetric } from './metrics/status-metric';
-import { StatusData, OverviewData } from './modem/modem';
 import { OverviewMetric } from './metrics/overview-metric';
+import { getDocsisStatus } from './commands/docsis';
+import { DocsisMetric } from './metrics/docsis-metric';
 
 export class PrometheusExporter {
     private readonly password: string
@@ -27,6 +28,7 @@ export class PrometheusExporter {
         this.httpServer = Express()
         this.extractors.set(MetricTypes.Status, new StatusMetric("Status", "Help on Status"))
         this.extractors.set(MetricTypes.Overview, new OverviewMetric("Overview", "Help on Overview"))
+        this.extractors.set(MetricTypes.Docsis, new DocsisMetric("Docsis", "Help on Docsis"))
         this.initServer()
     }
 
@@ -62,13 +64,17 @@ export class PrometheusExporter {
         let preScrapeTime = Date.now()
         let statusData = undefined
         let overviewData = undefined
+        let docsisData = undefined
 
         try {
             // scrape status
             statusData = await getStatus(modem, this.logger)
-            // TODO: get docsis info
+
             // get overview data, contains attached devices
             overviewData = await getOverview(modem, this.logger)
+            
+            // get docsis data
+            docsisData = await getDocsisStatus(modem, this.logger)
         } catch (error) {
             this.logger.error(error)
         }
@@ -79,6 +85,10 @@ export class PrometheusExporter {
 
         if (overviewData != undefined) {
             (this.extractors.get(MetricTypes.Overview) as OverviewMetric)?.extract(overviewData);
+        }
+
+        if (docsisData != undefined){
+            (this.extractors.get(MetricTypes.Docsis) as DocsisMetric)?.extract(docsisData)
         }
  
         let postScrapeTime = Date.now()
