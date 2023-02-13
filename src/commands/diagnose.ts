@@ -1,11 +1,10 @@
 import { Flags } from '@oclif/core';
 import Command from '../base-command';
-import {discoverModemIp, ModemDiscovery} from '../modem/discovery'
 import DocsisDiagnose from "../modem/docsis-diagnose";
-import { modemFactory } from '../modem/factory';
 import { TablePrinter } from "../modem/printer";
 import { webDiagnoseLink } from "../modem/web-diagnose";
 import { getDocsisStatus } from "./docsis";
+import {login} from './login'
 
 export default class Diagnose extends Command {
   static description =
@@ -39,11 +38,7 @@ export default class Diagnose extends Command {
 
     let modem
     try {
-      // TODO: use login command
-      const modemIp = await discoverModemIp()
-      const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
-      modem = modemFactory(discoveredModem, this.logger)
-      await modem.login(password!)
+      modem = await login(password!)
       const docsisStatus = await getDocsisStatus(modem, this.logger)
       const diagnoser = new DocsisDiagnose(docsisStatus)
       const tablePrinter = new TablePrinter(docsisStatus);

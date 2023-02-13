@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
-import { Log } from '../logger'
+import { Log, ConsoleLogger } from '../logger'
 import { TechnicolorConfiguration } from './technicolor-modem'
 import { extractFirmwareVersion } from './tools/html-parser'
 const BRIDGED_MODEM_IP = '192.168.100.1'
@@ -29,7 +29,7 @@ export interface ModemInformation {
 }
 
 export class ModemDiscovery {
-  constructor(private readonly modemIp: string, private readonly logger: Log) { }
+  constructor(private readonly modemIp: string, private readonly logger: Log = new ConsoleLogger()) { }
 
   async tryTechnicolor(): Promise<ModemInformation> {
     const { data } = await axios.get<TechnicolorConfiguration>(`http://${this.modemIp}/api/v1/login_conf`)

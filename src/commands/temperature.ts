@@ -1,7 +1,6 @@
 import Command from '../base-command'
 import { Flags} from '@oclif/core'
-import { modemFactory } from '../modem/factory';
-import {discoverModemIp, ModemDiscovery} from '../modem/discovery'
+import { login } from './login';
 
 export default class Temperature extends Command{
     static description = "Read out modem temperature";
@@ -14,10 +13,6 @@ export default class Temperature extends Command{
       };
 
     async run(): Promise<void> {
-        const modemIp = await discoverModemIp()
-        const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
-        const modem = modemFactory(discoveredModem, this.logger)
-
         try {        
             const { flags } = await this.parse(Temperature);
             const password = flags.password ?? process.env.VODAFONE_ROUTER_PASSWORD
@@ -27,11 +22,7 @@ export default class Temperature extends Command{
             )
             this.exit()
             }
-            const modemIp = await discoverModemIp()
-            const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
-            const modem = modemFactory(discoveredModem, this.logger)
-
-            await modem.login(password!)
+            const modem = await login(password!)
             const temperature = await modem.temperature();
         } catch (error) {
             this.error(error as Error,{message:"Login not successful"})

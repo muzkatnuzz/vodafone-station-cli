@@ -1,8 +1,7 @@
 import { Flags} from '@oclif/core'
 import Command from '../base-command'
-import {discoverModemIp, ModemDiscovery} from '../modem/discovery'
+import {login} from './login'
 import {Modem, StatusData} from '../modem/modem'
-import {modemFactory} from '../modem/factory'
 import {Log } from '../logger'
 
 export async function getStatus(modem: Modem, logger: Log): Promise<StatusData> {
@@ -36,19 +35,9 @@ export default class Status extends Command {
   async run(): Promise<void> {
     const { flags } = await this.parse(Status)
     const password = flags.password ?? process.env.VODAFONE_ROUTER_PASSWORD
-    if (!password || password === undefined) {
-      this.log(
-        'You must provide a password either using -p or by setting the environment variable VODAFONE_ROUTER_PASSWORD'
-      )
-      this.exit()
-    }
     let modem
     try {
-      // TODO: use login command
-      const modemIp = await discoverModemIp()
-      const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
-      modem = modemFactory(discoveredModem, this.logger)
-      await modem.login(password!)
+      modem = await login(password)
       const status = await getStatus(modem, this.logger)
     
       this.log(JSON.stringify(status))

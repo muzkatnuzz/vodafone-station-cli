@@ -1,11 +1,10 @@
 import { Flags} from '@oclif/core'
 import {promises as fsp} from 'fs'
 import Command from '../base-command'
-import {discoverModemIp, ModemDiscovery} from '../modem/discovery'
 import {Modem, DocsisStatus} from '../modem/modem'
-import {modemFactory} from '../modem/factory'
 import {Log } from '../logger'
 import {webDiagnoseLink} from "../modem/web-diagnose"
+import {login} from './login'
 
 export async function getDocsisStatus(modem: Modem, logger:Log): Promise<DocsisStatus> {
   try {
@@ -62,11 +61,7 @@ export default class Docsis extends Command {
 
     let modem
     try {
-      // TODO: use login command
-      const modemIp = await discoverModemIp()
-      const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
-      modem = modemFactory(discoveredModem, this.logger)
-      await modem.login(password!)
+      modem = await login(password!)
       const docsisStatus = await getDocsisStatus(modem, this.logger)
       const docsisStatusJSON = JSON.stringify(docsisStatus, undefined, 4)
 

@@ -1,9 +1,8 @@
 import { Flags} from '@oclif/core'
 import Command from '../base-command'
-import {discoverModemIp, ModemDiscovery} from '../modem/discovery'
 import {Modem, OverviewData} from '../modem/modem'
-import {modemFactory} from '../modem/factory'
 import {Log } from '../logger'
+import {login} from './login'
 
 export async function getOverview(modem: Modem, logger: Log): Promise<OverviewData> {
   try {
@@ -44,12 +43,8 @@ export default class Overview extends Command {
     }
     
     let modem
-    try {
-      // TODO: use login command
-      const modemIp = await discoverModemIp()
-      const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
-      modem = modemFactory(discoveredModem, this.logger)
-      await modem.login(password!)
+    try {      
+      modem = await login(password!)
       const overview = await getOverview(modem, this.logger)
     
       this.log(JSON.stringify(overview))

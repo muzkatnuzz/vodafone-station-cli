@@ -17,27 +17,32 @@ export default class Login extends Command {
   async run(): Promise<Modem> {
     const { flags } = await this.parse(Login)
     const password = flags.password ?? process.env.VODAFONE_ROUTER_PASSWORD
-    if (!password || password === '') {
-      this.log(
-        'You must provide a password either using -p or by setting the environment variable VODAFONE_ROUTER_PASSWORD'
-      )
-      this.exit()
-    }
-    const modemIp = await discoverModemIp()
-    const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
-    const modem = modemFactory(discoveredModem, this.logger)
-
+    
+    let modem
     try {
-      await modem.login(password!)
+      modem = await login(password!)
     } catch (error) {
       this.error(error as Error, { message: "Login not successful" })
-    } finally {
-      if (modem) {
-        await modem.logout()
-      }
     }
 
     return modem
   }
+}
 
+export async function login(password?: string): Promise<Modem> {
+  if (!password || password === '') {
+    throw new Error('You must provide a password either using -p or by setting the environment variable VODAFONE_ROUTER_PASSWORD')
+  }
+
+  const modemIp = await discoverModemIp()
+  const discoveredModem = await new ModemDiscovery(modemIp).discover()
+  const modem = modemFactory(discoveredModem)
+
+  try {
+    await modem.login(password!)
+  } catch (error) {
+    throw new Error("Login not successful")
+  }
+
+  return modem
 }
