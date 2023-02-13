@@ -55,6 +55,10 @@ export default class Diagnose extends Command {
       this.log(diagnoser.printDeviationsConsole())
     } catch (error) {
       this.error(error as Error, { message: "Something went wrong" })
+    } finally{
+      if(modem){
+        await modem.logout()
+      }
     }
   }
 }

@@ -10,7 +10,7 @@ export async function getStatus(modem: Modem, logger: Log): Promise<StatusData> 
     logger.debug(statusData)
     return statusData
   } catch (error) {
-    logger.error(`Could not fetch status from modem.`,error)
+    logger.warn(`Could not fetch status from modem.`)
     throw error;
   }
 }

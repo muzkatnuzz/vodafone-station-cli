@@ -1,7 +1,6 @@
 import { register, collectDefaultMetrics } from 'prom-client';
 import Express from 'express';
-import { modemFactory } from './modem/factory';
-import { discoverModemIp, ModemDiscovery } from './modem/discovery'
+import { login } from './commands/login';
 import { Log } from './logger'
 import { getStatus } from './commands/status'
 import { getOverview } from './commands/overview'
@@ -44,16 +43,11 @@ export class PrometheusExporter {
 
         // login
         try {
-            // TODO: use login command
-            const modemIp = await discoverModemIp()
-            const discoveredModem = await new ModemDiscovery(modemIp, this.logger).discover()
-            modem = modemFactory(discoveredModem, this.logger)
-
-            await modem.login(this.password)
+            modem = await login(this.password)     
         } catch (error) {
             loginLogoutSuccess = false
             modem = null
-            this.logger.error('Not able to login', error)
+            this.logger.warn('Not able to login')
         }
 
         if (modem == null) {
@@ -76,7 +70,7 @@ export class PrometheusExporter {
             // get docsis data
             docsisData = await getDocsisStatus(modem, this.logger)
         } catch (error) {
-            this.logger.error(error)
+            this.logger.warn(error)
         }
 
         if (statusData != undefined) {
@@ -98,7 +92,7 @@ export class PrometheusExporter {
             this.logger.log("Logout after scrape cycle.")
             await modem.logout()
         } catch (error) {
-            this.logger.error(error)
+            this.logger.warn(error)
             loginLogoutSuccess = false
         }
         

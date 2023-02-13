@@ -94,7 +94,7 @@ export class Arris extends Modem {
       this.logger.log('Logging out...')
       return  this.httpClient.post('/php/logout.php')
     } catch (error) {
-      this.logger.error('Could not do a full session logout', error)
+      this.logger.warn('Could not do a full session logout')
       throw error
     }
   }
@@ -127,7 +127,7 @@ export class Arris extends Modem {
       this.logger.debug('Parsed crypto vars: ', cryptoVars)
       return cryptoVars
     } catch (error) {
-      this.logger.error('Could not get the index page from the router', error)
+      this.logger.warn('Could not get the index page from the router')
       throw error
     }
   }
@@ -173,7 +173,7 @@ export class Arris extends Modem {
       }
       return data
     } catch (error) {
-      this.logger.error('Could not pass password on remote router.', error)
+      this.logger.warn('Could not pass password on remote router.')
       throw error
     }
   }
@@ -190,7 +190,7 @@ export class Arris extends Modem {
       const {data} = await this.httpClient.get('/base_95x.js')
       return extractCredentialString(data as string)
     } catch (error) {
-      this.logger.error('Could not fetch credential.', error)
+      this.logger.warn('Could not fetch credential.')
       throw error
     }
   }
@@ -209,7 +209,7 @@ export class Arris extends Modem {
       })
       return 42
     } catch (error) {
-      this.logger.error('Could not fetch modem temperature', error)
+      this.logger.warn('Could not fetch modem temperature')
       throw error
     }
 }
@@ -228,7 +228,7 @@ export class Arris extends Modem {
       })
       return normalizeDocsisStatus(extractDocsisStatus(data as string))
     } catch (error) {
-      this.logger.error('Could not fetch remote docsis status', error)
+      this.logger.warn('Could not fetch remote docsis status')
       throw error
     }
   }
@@ -247,7 +247,7 @@ export class Arris extends Modem {
       })
       return extractOverviewData(data as string)
     } catch (error) {
-      this.logger.error('Could not fetch remote docsis status', error)
+      this.logger.warn('Could not fetch remote docsis status')
       throw error
     }
   }
@@ -267,7 +267,7 @@ export class Arris extends Modem {
       })
       return extractStatus(data as string)
     } catch (error) {
-      this.logger.error('Could not fetch remote docsis status', error)
+      this.logger.warn('Could not fetch remote status data')
       throw error
     }
   }
@@ -290,7 +290,7 @@ export class Arris extends Modem {
       this.logger.log('Router is restarting')
       return data
     } catch (error) {
-      this.logger.error('Could not restart router.', error)
+      this.logger.warn('Could not restart router.')
       throw error
     }
   }

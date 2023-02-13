@@ -16,8 +16,7 @@ export async function discoverModemIp(): Promise<string> {
     }
     throw new Error();
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Could not find a router/modem under the known addresses.')
+    console.warn('Could not find a router/modem under the known addresses.')
     throw error
   }
 }

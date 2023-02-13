@@ -10,7 +10,7 @@ export async function getOverview(modem: Modem, logger: Log): Promise<OverviewDa
     logger.debug(overviewData)
     return overviewData
   } catch (error) {
-    logger.error(`Could not fetch overview from modem.`,error)
+    logger.warn(`Could not fetch overview from modem.`)
     throw error;
   }
 }
@@ -49,7 +49,7 @@ export default class Overview extends Command {
     
       this.log(JSON.stringify(overview))
     } catch (error) {
-      this.error(error as Error,{message:"Something went wrong"})
+      this.error(error as Error, {message:"Something went wrong"})
     }
     finally {
       if (modem) {

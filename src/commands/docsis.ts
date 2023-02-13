@@ -12,7 +12,7 @@ export async function getDocsisStatus(modem: Modem, logger:Log): Promise<DocsisS
     logger.debug(docsisData)
     return docsisData
   } catch (error) {
-    logger.error(`Could not fetch docsis status from modem.`,error)
+    logger.warn(`Could not fetch docsis status from modem.`)
     throw error;
   }
 }

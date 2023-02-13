@@ -23,6 +23,10 @@ export default class Login extends Command {
       modem = await login(password!)
     } catch (error) {
       this.error(error as Error, { message: "Login not successful" })
+    } finally{
+      if(modem){
+        await modem.logout()
+      }
     }
 
     return modem

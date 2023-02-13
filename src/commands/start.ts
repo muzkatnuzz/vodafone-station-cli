@@ -1,6 +1,6 @@
-import {Flags} from '@oclif/core'
+import { Flags } from '@oclif/core'
 import Command from '../base-command'
-import {PrometheusExporter} from '../prometheus-exporter'
+import { PrometheusExporter } from '../prometheus-exporter'
 
 export default class Start extends Command {
   static description = 'Start serving prometheus.'
@@ -11,19 +11,19 @@ export default class Start extends Command {
 
   static flags = {
     // flag with a value (-n, --name=VALUE)
-    name: Flags.string({char: 'n', description: 'name to print'}),
+    name: Flags.string({ char: 'n', description: 'name to print' }),
     // flag with no value (-f, --force)
-    force: Flags.boolean({char: 'f'}),
+    force: Flags.boolean({ char: 'f' }),
     password: Flags.string({
       char: 'p',
       description: 'router/modem password',
     })
   }
 
-  static args = [{name: 'file'}]
+  static args = [{ name: 'file' }]
 
   public async run(): Promise<void> {
-    const {args, flags} = await this.parse(Start)
+    const { args, flags } = await this.parse(Start)
 
     const name = flags.name ?? 'world'
     this.log(`hello ${name} from /home/abb/Dokumente/Code/vodafone-station-cli/src/commands/start.ts`)
@@ -41,8 +41,8 @@ export default class Start extends Command {
     try {
       // start http client
       new PrometheusExporter(password!, this.logger);
-  } catch (error) {
+    } catch (error) {
       this.logger.error(error)
-  }
+    }
   }
 }
