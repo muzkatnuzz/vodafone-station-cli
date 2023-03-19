@@ -10,7 +10,6 @@ Scrape your Arris based Vodafone Station router (rudimentary support for Technic
 * [Notes](#notes)
 * [Useful related projects:](#useful-related-projects)
 * [Running from source](#running-from-source)
-* [Usage](#usage)
 * [Commands](#commands)
 <!-- tocstop -->
 
@@ -530,11 +529,40 @@ The Diagnose module is based on the guidelines/values provided by Meister Voda:
 - ensure everything is ok `npm audit fix`
 - (optional if package is missing `npm install typescript` or at specific version `npm i typescript@4.4.4` or as developer dependency `npm install --save-dev typescript` or as global package `npm install -g typescript`)
 - Run by `npx vodafone-station-cli`
+- pack by `npx oclif pack:tarballs -r ~/Dokumente/Code/vodafone-station-cli -t linux-arm`
 
 Run single command with debug output from within project base directory:
 - `env DEBUG=* ./bin/dev status`
 
 Rename file `.env.sample`to `.env`to add your router password as environment variable to the executable.
+
+# Run as service
+
+Run as service on systemd based linux architectures is possible by following steps. Example is based on Raspberry Pi 2 Model B.
+
+- copy to target home `sudo scp '/home/abb/Dokumente/Code/vodafone-station-cli/dist/vodafone-station-cli-v1.2.8-6fa8db0-linux-arm.tar.gz' pi@192.168.0.132:"~/vodafone-station-cli-v1.2.8-6fa8db0-linux-arm.tar.gz"`
+- extract `tar -xvzf vodafone-station-cli-v1.2.8-6fa8db0-linux-arm.tar.gz`
+- copy to final destination `sudo cp -r ~/vodafone-station-cli/ /opt/`
+- create service `sudo nano /etc/systemd/system/vodafone_station_exporter.service`
+   [Unit]
+   Description=Start Vodafone Station Exporter (export to port 9705)
+   After=network-online.target
+   
+   [Service]
+   Type=idle
+   # set environment file to load .env file correctly
+   EnvironmentFile=/opt/vodafone-station-cli/bin/.env
+   ExecStart=node /opt/vodafone-station-cli/bin/run start
+   
+   [Install]
+   WantedBy=multi-user.target
+- reload service daemon on service file changes `sudo systemctl daemon-reload`
+- start service `sudo systemctl start vodafone_station_exporter`
+- restart service `sudo systemctl restart vodafone_station_exporter`
+- status service `sudo systemctl status vodafone_station_exporter`
+- stop service `sudo systemctl stop vodafone_station_exporter`
+
+Set up prometheus and grafana as documented for your system.
 
 # Commands
 <!-- commands -->
