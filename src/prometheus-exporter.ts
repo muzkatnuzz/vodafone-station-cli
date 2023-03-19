@@ -121,7 +121,9 @@ export class PrometheusExporter {
         this.httpServer.get('/metrics/uptime', async (req, res) => {
             try {
                 res.set('Content-Type', register.contentType);
-                res.end(await register.getSingleMetricAsString('device_uptime'));
+                let device_uptime = await register.getSingleMetricAsString('device_uptime')
+                this.logger.debug("Retrieved single metric device_uptime: ", device_uptime)
+                res.end(device_uptime);
             } catch (ex) {
                 res.status(500).end(ex);
             }
