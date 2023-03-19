@@ -5,11 +5,15 @@ import { OverviewData } from '../modem/modem'
 export class OverviewMetric extends MetricBaseClass<OverviewData> {
     private attachedLanDevices: Gauge
     private attachedWlanDevices: Gauge
+    private overviewData: OverviewData
+
     /**
      * Overview data contains attached devices
      */
     constructor(name: string, help: string) {
         super(name, help);
+
+        this.overviewData = { DsLitePlusIPv6: false, GuestWifiEnabled: false, GuestWlanAttachedDevice: [], GwMode: "", IsCmOperational: 0, LanAttachedDevices: [], ModemConnectionStatus: "", MtaEnabledByDHCP: false, Phones: [], PrimaryWlanAttachedDevice: [], ScheduleEnabled: false, WifiEnabled: false, WifiEnabledByMso: false, WpsEnabled: false }
 
         this.attachedLanDevices = new Gauge({
             name: "attached_devices_speed",
@@ -25,6 +29,8 @@ export class OverviewMetric extends MetricBaseClass<OverviewData> {
         
     }
     extract(data: OverviewData): void {
+        this.overviewData = data
+
         data.LanAttachedDevices.forEach(device => {
             // extract speed from Speed string ala "1 Gbps"
             this.attachedLanDevices.labels(device.MAC, device.HostName)
@@ -38,5 +44,9 @@ export class OverviewMetric extends MetricBaseClass<OverviewData> {
         data.GuestWlanAttachedDevice.forEach(device => {
             this.attachedWlanDevices.labels(device.MAC, device.HostName, "Guest").set(device.LinkRate)
         })
+    }
+
+    get data(): OverviewData{
+        return this.overviewData;
     }
 }

@@ -5,12 +5,15 @@ import { StatusData } from '../modem/modem'
 export class StatusMetric extends MetricBaseClass<StatusData> {
     private uptimeGauge: Gauge
     private deviceInfo: Gauge
+    private statusData: StatusData
 
     /**
      * Create status metric
      */
     constructor(name: string, help: string) {
         super(name, help);
+
+        this.statusData = { FirewallConfig: "", FirmwareVersion: "", HardwareTypeVersion: 1, IPv4Adress: "", IPv4Gateway: "", IPv6Adress: "", IPv6Prefix: "", SerialNumber: "", time: "", UptimeSinceReboot: "" }
 
         this.uptimeGauge = new Gauge({
             name: "device_uptime",
@@ -28,6 +31,7 @@ export class StatusMetric extends MetricBaseClass<StatusData> {
     }
 
     extract<T extends StatusData>(data: T): void {
+        this.statusData = data
         this.deviceInfo.labels(data.HardwareTypeVersion.toString(),
             data.FirmwareVersion,
             data.SerialNumber,
@@ -47,5 +51,9 @@ export class StatusMetric extends MetricBaseClass<StatusData> {
             (uptime?.groups?.Hours ? Number.parseInt(uptime.groups.Hours) * 60 * 60 : 0) + // hours to seconds
             (uptime?.groups?.Minutes ? Number.parseInt(uptime.groups.Minutes) * 60 : 0) // minutes to second
         )
+    }
+
+    get data(): StatusData{
+        return this.statusData;
     }
 }

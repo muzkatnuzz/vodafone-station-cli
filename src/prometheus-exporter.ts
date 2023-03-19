@@ -43,7 +43,7 @@ export class PrometheusExporter {
 
         // login
         try {
-            modem = await login(this.password)     
+            modem = await login(this.password)
         } catch (error) {
             loginLogoutSuccess = false
             modem = null
@@ -66,7 +66,7 @@ export class PrometheusExporter {
 
             // get overview data, contains attached devices
             overviewData = await getOverview(modem, this.logger)
-            
+
             // get docsis data
             docsisData = await getDocsisStatus(modem, this.logger)
         } catch (error) {
@@ -81,10 +81,10 @@ export class PrometheusExporter {
             (this.extractors.get(MetricTypes.Overview) as OverviewMetric)?.extract(overviewData);
         }
 
-        if (docsisData != undefined){
+        if (docsisData != undefined) {
             (this.extractors.get(MetricTypes.Docsis) as DocsisMetric)?.extract(docsisData)
         }
- 
+
         let postScrapeTime = Date.now()
 
         // logout after all data collected
@@ -95,7 +95,7 @@ export class PrometheusExporter {
             this.logger.warn(error)
             loginLogoutSuccess = false
         }
-        
+
         // summarize collected data
         scrapeDuration.set('status', postScrapeTime.valueOf() - preScrapeTime.valueOf())
         scrapeSuccess.set('status', statusData ? true : false)
@@ -104,7 +104,8 @@ export class PrometheusExporter {
 
     private initServer() {
         // init metric handling
-        collectDefaultMetrics({ register: register,
+        collectDefaultMetrics({
+            register: register,
             gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5], // These are the default buckets.
         });
 
@@ -117,7 +118,7 @@ export class PrometheusExporter {
                 res.status(500).end(ex);
             }
         });
-        
+
         this.httpServer.get('/metrics/uptime', async (req, res) => {
             try {
                 res.set('Content-Type', register.contentType);
@@ -128,11 +129,28 @@ export class PrometheusExporter {
                 res.status(500).end(ex);
             }
         });
-        
+
         // magic to actually serve scraped values
         this.httpServer.get('/metrics', (req, res) => {
             console.log('Scraped')
             res.send(register.metrics())
+        })
+
+        // serve data as json
+        this.httpServer.get('/json/overview', (req, res) => {
+            console.log('Get Overview Json')
+            res.set('Content-Type', 'application/json');
+            res.send(JSON.stringify(this.extractors.get(MetricTypes.Overview)?.data))
+        })
+        this.httpServer.get('/json/status', (req, res) => {
+            console.log('Get Status Json')
+            res.set('Content-Type', 'application/json');
+            res.send(JSON.stringify(this.extractors.get(MetricTypes.Status)?.data))
+        })
+        this.httpServer.get('/json/docsis', (req, res) => {
+            console.log('Get Docsis Json')
+            res.set('Content-Type', 'application/json');
+            res.send(JSON.stringify(this.extractors.get(MetricTypes.Docsis)?.data))
         })
 
         this.httpServer.listen(this.scrapePort, () =>
@@ -148,7 +166,7 @@ export class PrometheusExporter {
      * @param intervall intervall to sleep in between in ms
      */
     private async collectMetrics(intervall: number): Promise<any> {
-        const poll = async() => {
+        const poll = async () => {
             await this.scrape()
             setTimeout(() => poll(), intervall)
         };

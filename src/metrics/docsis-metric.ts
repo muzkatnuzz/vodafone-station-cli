@@ -9,6 +9,7 @@ export class DocsisMetric extends MetricBaseClass<DocsisStatus> {
     private downstreamRxmer: Gauge
     private upstreamFrequency: Gauge
     private upstreamPowerLevel: Gauge
+    private docsisData: DocsisStatus
 
     CHANNEL_ID = "channel_id"
 
@@ -17,6 +18,8 @@ export class DocsisMetric extends MetricBaseClass<DocsisStatus> {
      */
     constructor(name: string, help: string) {
         super(name, help);
+
+        this.docsisData = { downstream: [], downstreamOfdm: [], time: "", upstream: [], upstreamOfdma: []}
 
         this.downstreamFrequency = new Gauge({
             name: "device_downstream_frequency",
@@ -56,6 +59,8 @@ export class DocsisMetric extends MetricBaseClass<DocsisStatus> {
     }
 
     extract(data: DocsisStatus): void {
+        this.docsisData = data
+        
         data.downstream.forEach(channel => {
             this.downstreamFrequency.labels(channel.channelId).set(channel.frequency)
             this.downstreamPowerLevel.labels(channel.channelId).set(channel.powerLevel)
@@ -67,5 +72,9 @@ export class DocsisMetric extends MetricBaseClass<DocsisStatus> {
             this.upstreamFrequency.labels(channel.channelId).set(channel.frequency)
             this.upstreamPowerLevel.labels(channel.channelId).set(channel.powerLevel)
         })
+    }
+
+    get data(): DocsisStatus{
+        return this.docsisData;
     }
 }

@@ -8,6 +8,7 @@ export interface MetricsBase<T> {
     name: string;
     help: string;
     extract(data: T): void;
+    readonly data: T;
 }
 
 export abstract class MetricBaseClass<T> implements MetricsBase<T> {
@@ -23,4 +24,6 @@ export abstract class MetricBaseClass<T> implements MetricsBase<T> {
     }
 
     abstract extract(data: T): void
+
+    abstract get data(): T
 }
