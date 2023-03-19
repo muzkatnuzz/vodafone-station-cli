@@ -82,7 +82,12 @@ export class PrometheusExporter {
         }
 
         if (docsisData != undefined) {
-            (this.extractors.get(MetricTypes.Docsis) as DocsisMetric)?.extract(docsisData)
+            try {
+                (this.extractors.get(MetricTypes.Docsis) as DocsisMetric)?.extract(docsisData)
+            } catch (error) {
+                this.logger.error('Catched exception in DocsisMetric gauge.set?!')
+                this.logger.error(error)
+            }
         }
 
         let postScrapeTime = Date.now()
