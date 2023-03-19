@@ -114,32 +114,28 @@ export class PrometheusExporter {
             gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5], // These are the default buckets.
         });
 
-        this.httpServer.get('/metrics', async (req, res) => {
+        // magic to actually serve scraped values
+        this.httpServer.get('/metrics', async (req, res, next) => {
             try {
                 res.set('Content-Type', register.contentType);
                 res.end(await register.metrics());
                 console.log("Scraped")
-            } catch (ex) {
-                res.status(500).end(ex);
+            } catch (error) {
+                next(error)
             }
         });
 
-        this.httpServer.get('/metrics/uptime', async (req, res) => {
+        // example to serve single metric
+        this.httpServer.get('/metrics/uptime', async (req, res, next) => {
             try {
                 res.set('Content-Type', register.contentType);
                 let device_uptime = await register.getSingleMetricAsString('device_uptime')
                 this.logger.debug("Retrieved single metric device_uptime: ", device_uptime)
                 res.end(device_uptime);
-            } catch (ex) {
-                res.status(500).end(ex);
+            } catch (error) {
+                next(error)
             }
         });
-
-        // magic to actually serve scraped values
-        this.httpServer.get('/metrics', (req, res) => {
-            console.log('Scraped')
-            res.send(register.metrics())
-        })
 
         // serve data as json
         this.httpServer.get('/json/overview', (req, res) => {

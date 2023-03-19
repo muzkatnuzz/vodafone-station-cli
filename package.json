@@ -42,7 +42,7 @@
     "tough-cookie": "^4.1.2"
   },
   "devDependencies": {
-    "@types/express": "^4.17.16",
+    "@types/express": "^4.17.17",
     "@types/jest": "^28.1.1",
     "@types/node": "^18.0.0",
     "@types/sjcl": "^1.0.30",

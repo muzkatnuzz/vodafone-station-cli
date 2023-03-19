@@ -1108,7 +1108,12 @@
   "resolved" "https://registry.npmjs.org/@types/expect/-/expect-1.20.4.tgz"
   "version" "1.20.4"
 
-"@types/express-serve-static-core@^4.17.31":
+
+        
+        this.httpServer.get('/metrics', (req, res) => {
+            console.log('Scraped')
+            res.send(register.metrics())
+        })"@types/express-serve-static-core@^4.17.33":
   "integrity" "sha512-TPBqmR/HRYI3eC2E5hmiivIzv+bidAfXofM+sbonAGvyDhySGw9/PQZFt2BLOrjUUR++4eJVpx6KnLQK1Fk9tA=="
   "resolved" "https://registry.npmjs.org/@types/express-serve-static-core/-/express-serve-static-core-4.17.33.tgz"
   "version" "4.17.33"
@@ -1117,13 +1122,13 @@
     "@types/qs" "*"
     "@types/range-parser" "*"
 
-"@types/express@^4.17.16":
-  "integrity" "sha512-LkKpqRZ7zqXJuvoELakaFYuETHjZkSol8EV6cNnyishutDBCCdv6+dsKPbKkCcIk57qRphOLY5sEgClw1bO3gA=="
-  "resolved" "https://registry.npmjs.org/@types/express/-/express-4.17.16.tgz"
-  "version" "4.17.16"
+"@types/express@^4.17.17":
+  "integrity" "sha512-Q4FmmuLGBG58btUnfS1c1r/NQdlp3DMfGDGig8WhfpA2YRUtEkxAjkZb0yvplJGYdF1fsQ81iMDcH24sSCNC/Q=="
+  "resolved" "https://registry.npmjs.org/@types/express/-/express-4.17.17.tgz"
+  "version" "4.17.17"
   dependencies:
     "@types/body-parser" "*"
-    "@types/express-serve-static-core" "^4.17.31"
+    "@types/express-serve-static-core" "^4.17.33"
     "@types/qs" "*"
     "@types/serve-static" "*"
 
