@@ -13,7 +13,7 @@ export class OverviewMetric extends MetricBaseClass<OverviewData> {
 
         this.attachedLanDevices = new Gauge({
             name: "attached_devices_speed",
-            help: "Ethernet client network speed in mbit",
+            help: "Ethernet client network speed in Gbps",
             labelNames: ["mac_address", "hostname"]
         });
 
