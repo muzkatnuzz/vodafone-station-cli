@@ -1,12 +1,7 @@
-vodafone-station-cli
+Vodafone Station Prometheus Exporter
 ====================
 
-Access your Arris TG3442DE or Technicolor CGA4322DE, CGA6444VF (aka Vodafone Station) from the comfort of the command line.
-
-![ci-status](https://github.com/totev/vodafone-station-cli/actions/workflows/main.yml/badge.svg)
-[![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![latest version](https://img.shields.io/github/v/release/totev/vodafone-station-cli.svg)](https://github.com/totev/vodafone-station-cli/releases)
-[![npm](https://img.shields.io/npm/v/vodafone-station-cli)](https://www.npmjs.com/package/vodafone-station-cli)
+Scrape your Arris based Vodafone Station router (rudimentary support for Technicolor CGA4322DE, CGA6444VF) for Grafana visualization.
 
 <!-- toc -->
 * [Features](#features)
@@ -21,28 +16,25 @@ Access your Arris TG3442DE or Technicolor CGA4322DE, CGA6444VF (aka Vodafone Sta
 
 # Features
 
-* discover your vodafone station's IP in your local network
-* Retrieve the current docsis connection state and transform it into JSON
-* diagnose your docsis connection state to quickly detect abnormalities
-* restart your vodafone station
-* see your docsis connection information plotted in a web browser
-* share your docsis connection information with others via URL
+* Visualize connected W-/Lan Clients
+* View Docsis Down-/Upstream channel metrics
+* Retrieve modem stats (Firmware version, Firewall state...)
 
 # Demo
-<p align="center">
 
-![](./usage.svg)
-
-</p>
+![Alt text](/grafana_dashboard.jpg?raw=true "Grafana Dashboard")
 
 # Supported hardware
 
-Currently the following hardware/software is supported:
+Currently the following hardware/software is tested:
 
-- Arris TG3442DE running `AR01.02.068.11_092320_711.PC20.10`, `01.02.068.13.EURO.PC20`
+- Arris TG3442DE running `AR01.04.046.04.14_091322_7244.SIP.20.X2`
+
+Rudimental support for
 - Technicolor CGA4322DE running `1.0.9-IMS-KDG`, `2.0.17-IMS-KDG`, `3.0.41-IMS-KDG`
 - Technicolor CGA6444VF running firmware `19.3B57-1.0.41`
 
+Missing implmentation to retrieve overview pages and extract information for these modems.
 <details>
   <summary>Docsis data format</summary>
 
@@ -514,10 +506,15 @@ You can provide a password either by setting the environment variable `VODAFONE_
 
 # Useful related projects:
 
-- https://github.com/nox-x/TG3442DE-Teardown
-- https://github.com/cbruegg/packetloss-watchdog
+This code is heavily based on 
+- https://github.com/totev/vodafone-station-cli
+
+With some credits to
 - https://github.com/Fluepke/vodafone-station-exporter
-- https://github.com/bitwiseshiftleft/sjcl
+
+But as initial idea coming from the Connectbox:
+- https://github.com/mbugert/connectbox-prometheus
+
 
 Cable connection information/meaning:
 - https://motorolacable.com/whitepapers/cable-connection
@@ -526,30 +523,33 @@ The Diagnose module is based on the guidelines/values provided by Meister Voda:
 - https://www.vodafonekabelforum.de/viewtopic.php?t=32353
 
 # Running from source
-Clone this repository, install the dependencies via *yarn* and run `./bin/dev help`.
-If you are interested in seeing a more verbose version of what is going on during execution, enable debug logging on a per command basis like so `env DEBUG=\* ./bin/dev docsis`.
 
-# Usage
-<!-- usage -->
-```sh-session
-$ npm install -g vodafone-station-cli
-$ vodafone-station-cli COMMAND
-running command...
-$ vodafone-station-cli (--version)
-vodafone-station-cli/1.2.8 darwin-arm64 node-v18.3.0
-$ vodafone-station-cli --help [COMMAND]
-USAGE
-  $ vodafone-station-cli COMMAND
-...
-```
-<!-- usagestop -->
+- Clone repo `git clone <repo url ()ssh or https>`
+- install dependencies ``
+- Build by `npm run-script build`
+- ensure everything is ok `npm audit fix`
+- (optional if package is missing `npm install typescript` or at specific version `npm i typescript@4.4.4` or as developer dependency `npm install --save-dev typescript` or as global package `npm install -g typescript`)
+- Run by `npx vodafone-station-cli`
+
+Run single command with debug output from within project base directory:
+- `env DEBUG=* ./bin/dev status`
+
+Rename file `.env.sample`to `.env`to add your router password as environment variable to the executable.
+
 # Commands
 <!-- commands -->
 * [`vodafone-station-cli diagnose`](#vodafone-station-cli-diagnose)
 * [`vodafone-station-cli discover`](#vodafone-station-cli-discover)
 * [`vodafone-station-cli docsis`](#vodafone-station-cli-docsis)
 * [`vodafone-station-cli help [COMMAND]`](#vodafone-station-cli-help-command)
+* [`vodafone-station-cli login`](#vodafone-station-cli-login)
+* [`vodafone-station-cli logout [FILE]`](#vodafone-station-cli-logout-file)
+* [`vodafone-station-cli overview`](#vodafone-station-cli-overview)
 * [`vodafone-station-cli restart`](#vodafone-station-cli-restart)
+* [`vodafone-station-cli scrape [FILE]`](#vodafone-station-cli-scrape-file)
+* [`vodafone-station-cli start [FILE]`](#vodafone-station-cli-start-file)
+* [`vodafone-station-cli status`](#vodafone-station-cli-status)
+* [`vodafone-station-cli temperature`](#vodafone-station-cli-temperature)
 
 ## `vodafone-station-cli diagnose`
 
@@ -632,6 +632,68 @@ DESCRIPTION
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.1.12/src/commands/help.ts)_
 
+## `vodafone-station-cli login`
+
+Login and keep session open
+
+```
+USAGE
+  $ vodafone-station-cli login [-p <value>]
+
+FLAGS
+  -p, --password=<value>  router/modem password
+
+DESCRIPTION
+  Login and keep session open
+
+EXAMPLES
+  $ vodafone-station-cli docsis -p PASSWORD
+```
+
+_See code: [src/commands/login.ts](https://github.com/totev/vodafone-station-cli/blob/v1.2.8/src/commands/login.ts)_
+
+## `vodafone-station-cli logout [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ vodafone-station-cli logout [FILE] [-n <value>] [-f]
+
+FLAGS
+  -f, --force
+  -n, --name=<value>  name to print
+
+DESCRIPTION
+  describe the command here
+
+EXAMPLES
+  $ vodafone-station-cli logout
+```
+
+_See code: [src/commands/logout.ts](https://github.com/totev/vodafone-station-cli/blob/v1.2.8/src/commands/logout.ts)_
+
+## `vodafone-station-cli overview`
+
+Get the current overview as reported by the modem in a JSON format.
+
+```
+USAGE
+  $ vodafone-station-cli overview [-p <value>]
+
+FLAGS
+  -p, --password=<value>  router/modem password
+
+DESCRIPTION
+  Get the current overview as reported by the modem in a JSON format.
+
+EXAMPLES
+  $ vodafone-station-cli status -p PASSWORD
+  {JSON data}
+```
+
+_See code: [src/commands/overview.ts](https://github.com/totev/vodafone-station-cli/blob/v1.2.8/src/commands/overview.ts)_
+
 ## `vodafone-station-cli restart`
 
 Restart the router/modem
@@ -651,4 +713,88 @@ EXAMPLES
 ```
 
 _See code: [src/commands/restart.ts](https://github.com/totev/vodafone-station-cli/blob/v1.2.8/src/commands/restart.ts)_
+
+## `vodafone-station-cli scrape [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ vodafone-station-cli scrape [FILE] [-n <value>] [-f]
+
+FLAGS
+  -f, --force
+  -n, --name=<value>  name to print
+
+DESCRIPTION
+  describe the command here
+
+EXAMPLES
+  $ vodafone-station-cli scrape
+```
+
+_See code: [src/commands/scrape.ts](https://github.com/totev/vodafone-station-cli/blob/v1.2.8/src/commands/scrape.ts)_
+
+## `vodafone-station-cli start [FILE]`
+
+Start serving prometheus.
+
+```
+USAGE
+  $ vodafone-station-cli start [FILE] [-n <value>] [-f] [-p <value>]
+
+FLAGS
+  -f, --force
+  -n, --name=<value>      name to print
+  -p, --password=<value>  router/modem password
+
+DESCRIPTION
+  Start serving prometheus.
+
+EXAMPLES
+  $ vodafone-station-cli start
+```
+
+_See code: [src/commands/start.ts](https://github.com/totev/vodafone-station-cli/blob/v1.2.8/src/commands/start.ts)_
+
+## `vodafone-station-cli status`
+
+Get the current status as reported by the modem in a JSON format.
+
+```
+USAGE
+  $ vodafone-station-cli status [-p <value>]
+
+FLAGS
+  -p, --password=<value>  router/modem password
+
+DESCRIPTION
+  Get the current status as reported by the modem in a JSON format.
+
+EXAMPLES
+  $ vodafone-station-cli status -p PASSWORD
+  {JSON data}
+```
+
+_See code: [src/commands/status.ts](https://github.com/totev/vodafone-station-cli/blob/v1.2.8/src/commands/status.ts)_
+
+## `vodafone-station-cli temperature`
+
+Read out modem temperature
+
+```
+USAGE
+  $ vodafone-station-cli temperature [-p <value>]
+
+FLAGS
+  -p, --password=<value>  router/modem password
+
+DESCRIPTION
+  Read out modem temperature
+
+EXAMPLES
+  $ vodafone-station-cli temperature
+```
+
+_See code: [src/commands/temperature.ts](https://github.com/totev/vodafone-station-cli/blob/v1.2.8/src/commands/temperature.ts)_
 <!-- commandsstop -->
